@@ -1,219 +1,167 @@
-import random
-import os
-import json
-import sys
+from rich import print
+from rich.table import Table, box
+from rich.console import Console
 import time
-import colorama
-from colorama import init, Fore, Back
-init(autoreset=True)
-SAVE_FILE = "savegame.json"
+import os
+import random
+
+console = Console()
+
 def clear():
-    os.system("cls")
-def carregar():
-    clear()
-    barra = Fore.LIGHTGREEN_EX + Back.BLACK + "#"
-    bar = Fore.LIGHTRED_EX + Back.BLACK + "="
-    for i in range(0, 21, 5):
-        print(barra * i + bar * (20 - i) + f"{i*5}%")
+    """Limpa a tela do console."""
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+class Jogador:
+    """Representa o personagem do jogador."""
+    def __init__(self, nome: str, hpmax: int, atc: int, manamax: int, gold: int, xp: int):
+        self.nome = nome
+        self.hpmax = hpmax
+        self.hp = self.hpmax
+        self.atc = atc
+        self.manamax = manamax
+        self.mana = self.manamax
+        self.inventario = []
+        self.gold = gold
+        self.xp = xp
+
+    def status(self):
+        """Exibe o status detalhado do jogador."""
+        table = Table(box=box.HEAVY, style="blue")
+        table.add_column(f"Nome: [bold white]{self.nome}[/bold white]")
+        table.add_row(f"HP: [#00FF00]{self.hp}[/#00FF00]/[#00FF00]{self.hpmax}[/#00FF00]")
+        table.add_row(f"Mana: [#7B68EE]{self.mana}[/#7B68EE]/[#7B68EE]{self.manamax}[/#7B68EE]")
+        table.add_row(f"Ataque: [#FF0000]{self.atc}[/#FF0000]")
+        table.add_row(f"Ouro: [#FFFF00]{self.gold}[/#FFFF00]")
+        table.add_row(f"XP: [#4B0082]{self.xp}[/#4B0082]")
+        console.print(table)
+
+    def batalha_info(self):
+        """Exibe informações do jogador específicas para a batalha."""
+        table = Table(box=box.HEAVY, title=f"--- [bold blue]{self.nome}[/bold blue] ---")
+        table.add_row("HP", f"[#00FF00]{self.hp}[/#00FF00]/[#00FF00]{self.hpmax}[/#00FF00]")
+        table.add_row("Mana", f"[#7B68EE]{self.mana}[/#7B68EE]/[#7B68EE]{self.manamax}[/#7B68EE]")
+        table.add_row("Ataque", f"[#FF0000]{self.atc}[/#FF0000]")
+        console.print(table)
+
+    def take_damage(self, damage: int):
+        """Reduz o HP do jogador pelo dano recebido."""
+        self.hp -= damage
+        if self.hp < 0:
+            self.hp = 0
+        console.print(f"[bold red]{self.nome} recebeu {damage} de dano![/bold red]")
+
+    def attack_enemy(self, enemy):
+        """Jogador ataca o inimigo."""
+        damage = random.randint(self.atc - 3, self.atc + 3)
+        enemy.take_damage(damage)
+        console.print(f"[bold green]{self.nome} atacou {enemy.name} e causou {damage} de dano![/bold green]")
         time.sleep(1)
+
+class Inimigo:
+    """Representa um personagem inimigo."""
+    def __init__(self, name: str, hp: int, atk: int, xp: int, ascii_art=""):
+        self.ascii = ascii_art
+        self.name = name
+        self.hp = hp
+        self.atk = atk
+        self.xp = xp
+        self.hp_max = hp
+
+    def info(self):
+        """Exibe informações detalhadas do inimigo."""
+        table = Table(box=box.HEAVY, style='red')
+        table.add_column(f'Nome: [bold red]{self.name}[/bold red]')
+        table.add_row(f'{self.ascii}')
+        table.add_row(f"Vida: [#FF0000]{self.hp}[/#FF0000]/[#FF0000]{self.hp_max}[/#FF0000]")
+        table.add_row(f'Ataque: {self.atk}')
+        print(table)
+
+    def take_damage(self, damage: int):
+        """Reduz o HP do inimigo pelo dano recebido."""
+        self.hp -= damage
+        if self.hp < 0:
+            self.hp = 0
+        console.print(f"[bold red]{self.name} recebeu {damage} de dano![/bold red]")
+
+    def attack_player(self, player):
+        """Inimigo ataca o jogador."""
+        damage = random.randint(self.atk - 2, self.atk + 2)
+        player.take_damage(damage)
+        console.print(f"[bold red]{self.name} atacou {player.nome} e causou {damage} de dano![/bold red]")
+        time.sleep(1)
+
+# --- Sistema de Combate ---
+def combat(player: Jogador, enemy: Inimigo):
+    """Gerencia o combate por turnos entre o jogador e um inimigo."""
+    console.print(f"\n--- [bold yellow]Um {enemy.name} selvagem apareceu![/bold yellow] ---")
+    time.sleep(1.5)
+
+    while player.hp > 0 and enemy.hp > 0:
         clear()
+        console.print("\n--- [bold cyan]TURNO DE BATALHA[/bold cyan] ---")
+        player.batalha_info()
+        enemy.info()
 
-def salvar_jogo(dados):
-    with open(SAVE_FILE, "w") as arquivo:
-        json.dump(dados, arquivo)
-    print("Jogo salvo com sucesso!")
+        # Turno do Jogador
+        console.print("\n[bold green]Seu Turno![/bold green]")
+        console.print("[1] Atacar")
 
-def carregar_jogo():
-    if os.path.exists(SAVE_FILE):
-        with open(SAVE_FILE, "r") as arquivo:
-            dados = json.load(arquivo)
-        print("Save carregado com sucesso!")
-        time.sleep(1)
-        return dados
+        choice = console.input("[bold blue]Escolha uma ação: [/bold blue]")
+
+        if choice == '1':
+            player.attack_enemy(enemy)
+        else:
+            console.print("[bold red]Ação inválida! Você perde seu turno![/bold red]")
+            time.sleep(1.5)
+        if enemy.hp <= 0:
+            break
+        console.print(f"\n[bold red]Turno do {enemy.name}![/bold red]")
+        enemy.attack_player(player)
+        time.sleep(1.5)
+
+    clear()
+    if player.hp <= 0:
+        console.print("[bold red]Você foi derrotado... Fim de Jogo.[/bold red]")
+        player.status()
     else:
-        print("Nenhum save encontrado.")
-        time.sleep(2)
-        return None
+        console.print(f"[bold green]Você derrotou o {enemy.name}![/bold green]")
+        console.print(f"[bold yellow]Você ganhou {enemy.xp} XP![/bold yellow]")
+        player.xp += enemy.xp
+        player.gold += random.randint(5, 15)
+        console.print(f"[bold yellow]Você encontrou {player.gold} ouro![/bold yellow]")
+        player.status() 
 
-def novo_jogo():
-    nome = input("Digite o nome do seu personagem: ")
-    personagem = {
-        "nome": nome,
-        "fisico": 100,
-        "sanidade": 100
-    }
-    salvar_jogo(personagem)
-    return personagem
-
-def pescaodor():
-    clear()
-    barco = Fore.BLUE + '''    ==================================================
-    |}                   /|___                      {|
-    |}                 ///|   ))                    {|
-    |}               /////|   )))                   {|
-    |}             ///////|    )))                  {|
-    |}           /////////|     )))                 {|
-    |}         ///////////|     ))))                {|
-    |}       /////////////|     )))                 {|
-    |}      //////////////|    )))                  {|
-    |}    ////////////////|___)))                   {|
-    |}      ______________|________                 {|
-    |}      \                    /                  {|
-    |}    ~~~~~~~~~~~~~~~~~~~~~~~~~~                {|
-    =================================================='''
-    print(barco)
-    pescaodr = """
-    Você decide entrar dentro do barco do velho pescador
-    While o senhor que fuma cachinbo e gosta de pescar
-    ele pesca de tudo peixes, moluscos e tubaroes
-    While: *está dormindo em sua rede do seu barco*
-    While: oque você quer garoto? se quiser pescar fale logo 
-    quero dormir hoje só acordo com um pescador bom 
-    você quer pescar com o velho While?
-"""
-    for caractere in pescaodr:
-        sys.stdout.write(caractere)
-        sys.stdout.flush()
-        time.sleep(0)
-    print(Fore.GREEN+"  SIM", Fore.RED+"NÃO")
-    print(Fore.RED + "=#" * 25)
-    ops = input("=>")
-    if ops == "s":
-        clear()
-        while True:
-            input(Fore.LIGHTMAGENTA_EX + "Pressione Enter para lançar sua linha...")
-            print(Fore.LIGHTRED_EX +"Lançando a linha...")
-            print("=#" * 25)
-            chance_de_peixe = random.randint(1, 100)
-            if chance_de_peixe <= 75:
-                tipo_de_peixe = random.choice(["Tilápia", "Robalo", "Carpa", "Salmão", "Dourado"])
-                tamanho_do_peixe = round(random.uniform(1.0, 10.0), 2)
-                print(f"While:Boa rapaz pescou um(a) {tipo_de_peixe} de {tamanho_do_peixe} kg!")
-                print("While: foi bom para um iniciante")
-                clear()
-                print(barco)
-            elif chance_de_peixe <=25:
-                tipo_de_molusco = random.choice(["Lagosta", "Carangueijo", "Camaram"])
-                tamanho_do_molusco = round(random.uniform(0.1, 2.5), 2)
-                print(f"While:Boa rapaz pescou um(a) {tipo_de_molusco} de {tamanho_do_molusco} kg!")
-                print("While: foi bom para um iniciante")
-                clear()
-                print(barco)
-            else:
-                print("Sua linha voltou vazia. Mais sorte na próxima vez!")
-                input()
-                clear()
-
-def praia():
-    clear()
-    praia_ascii = Fore.YELLOW +"""           |
-         \ _ /
-       -= (_) =-
-         /   \         _\/_
-           |           //o\  _\/_
-    _____ _ __ __ ____ _ | __/o\\ _
-=- =-=-_-__=_-= _=_=-=_,-'|"'""|-,_
-=- =- _=-=- -_=-=_,-";;..'.'.'.'|
-=-   =- =- -=.--"''''''''''''''               """
-    print(praia_ascii)
-    descrição ='''Local:Praia
-DESCRIÇÃO:andando na praia você vê as palmeiras e o
-sol e sente a areia quente nos seus pés e escuta o
-som forte do oceano azul e uma brisa boa.
-'''
-    for caractere in descrição:
-        sys.stdout.write(caractere)
-        sys.stdout.flush()
-        time.sleep(0.05)
-    print(Fore.BLUE+ "#=" * 25)
-    print("escolha uma das açoes a baixo")
-    print(Fore.BLUE+ "pescador", Fore.GREEN + "professora")
-    ops = input("conversar com:").lower()
-    while ops not in ["pescador", "professora"]:
-        clear()
-        print(praia_ascii)
-        print(descrição)
-        print(Fore.BLUE+ "#=" * 25)
-        print("escolha uma das açoes a baixo")
-        print(Fore.BLUE+ "pescador", Fore.GREEN + "professora")
-        ops = input("conversar com:").lower()
-    if ops == "pescador":
-        pescaodor()
-    elif ops == "professora":
-        pass
-
-    
-
-demo = '''      ▄▄▄▄▄▄  ▄▄▄▄▄▄▄ ▄▄   ▄▄ ▄▄▄▄▄▄▄    
-    █      ██       █  █▄█  █       █    
-    █  ▄    █    ▄▄▄█       █   ▄   █    
-    █ █ █   █   █▄▄▄█       █  █ █  █    
-    █ █▄█   █    ▄▄▄█       █  █▄█  █    
-    █       █   █▄▄▄█ ██▄██ █       █    
-    █▄▄▄▄▄▄██▄▄▄▄▄▄▄█▄█   █▄█▄▄▄▄▄▄▄█    
-        ========================         
-        |}      --JOGAR--     {|         
-        |}      --LOAD--      {|         
-        |}      --SAIR--      {|         
-        ========================         '''
-
-
-def play(personagem,):
-    clear()
-    farol= Fore.RED + """==================================================
-|} . _  .    .__  .  .  __,--'                  {|
-|}  (_)    ' /__\\ __,--'                        {|
-|}'  .  ' . '| o|'                              {|
-|}          [IIII]`--.__                        {|
-|}           |  |       `--.__                  {| 
-|}           | :|             `--.__            {|
-|}           |  |                   `--.__      {|
-|}.,,.-,.__.'__.___.,.,.-..,.,.,.,-._..--..     {| 
-=================================================="""
-    texto ="""Local: Farol
-DESCRIÇÃO: Você está na parte de fora do seu 
-farol e está um belo dia como sempre na praia 
-pelicano você está vendo algumas coisas na praia
-"""
-    print(farol)
-    for caractere in texto:
-        sys.stdout.write(caractere)
-        sys.stdout.flush()
-        time.sleep(0.05)
-    print(Fore.CYAN +'=#' * 25)
-    print("Digite alguma ação")
-    print(Fore.YELLOW + "Ir a praia", Fore.BLUE + "entrar no farol")
-    print(Fore.LIGHTMAGENTA_EX + "MENU      ", Fore.RED + "Sair")
-    ops = input(Fore.GREEN + "=>")
-    if ops == "praia":
-        praia()
-    elif ops == "oceano":
-        pass
-    elif ops == "menu":
-        pass
-    elif ops == "sair":
-        clear()
-        exit()
-
-
+    console.input("\n[bold magenta]Pressione Enter para continuar...[/bold magenta]")
 def menu():
     clear()
-    print(Fore.LIGHTMAGENTA_EX + demo)
-    ops = input("=>").lower()
-    while ops not in ["jogar", "load", "sair"]:
-        clear()
-        print(Fore.LIGHTMAGENTA_EX + demo)
-        ops = input("=>").lower()
-    if ops == "jogar":
-        personagem = novo_jogo()
-        play(personagem)
-    elif ops == "load":
-        personagem = carregar_jogo()
-        if personagem:
-            play(personagem)
-        else:
-            menu()
-    elif ops == "sair":
-        clear()
-        sys.exit()
-menu()
+    nome = console.input("[bold blue]Digite o nome do seu jogador: [/bold blue]")
+    player1 = Jogador(nome, hpmax=100, atc=15, manamax=50, gold=250, xp=0)
+    player1.status()
+    time.sleep(2)
+
+    # Definir alguns inimigos
+    mosquito_art = '''
+  }{    
+ -==o-
+    '''
+    mosquito = Inimigo(ascii_art=mosquito_art, name='Mosquito Gigante', hp=50, atk=8, xp=50)
+
+    goblin_art = '''
+ }O{
+ /|\
+ ===
+    '''
+    goblin = Inimigo(ascii_art=goblin_art, name='Goblin Selvagem', hp=75, atk=12, xp=75)
+
+    # Iniciar um encontro de combate
+    combat(player1, mosquito)
+    if player1.hp > 0:
+        console.print("\n[bold yellow]Você continua sua jornada... e encontra outro inimigo![/bold yellow]")
+        time.sleep(2)
+        combat(player1, goblin)
+    else:
+        console.print("\n[bold red]Sua jornada termina aqui.[/bold red]")
+
+
+if __name__ == "__main__":
+    menu()
