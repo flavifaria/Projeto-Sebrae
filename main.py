@@ -13,34 +13,39 @@ def clear():
 
 class Jogador:
     """Representa o personagem do jogador."""
-    def __init__(self, nome: str, hpmax: int, atc: int, manamax: int, gold: int, xp: int):
+    def __init__(self, nome: str, max_hp: int, atc: int, max_mana: int, gold: int, xp: int):
         self.nome = nome
-        self.hpmax = hpmax
-        self.hp = self.hpmax
+        self.max_hp = max_hp
+        self.hp = self.max_hp
         self.atc = atc
-        self.manamax = manamax
-        self.mana = self.manamax
+        self.max_mana = max_mana
+        self.mana = self.max_mana
         self.inventario = []
         self.gold = gold
         self.xp = xp
+        self.hit_chance = 75
 
     def status(self):
         """Exibe o status detalhado do jogador."""
+        clear() 
         table = Table(box=box.HEAVY, style="blue")
         table.add_column(f"Nome: [bold white]{self.nome}[/bold white]")
-        table.add_row(f"HP: [#00FF00]{self.hp}[/#00FF00]/[#00FF00]{self.hpmax}[/#00FF00]")
-        table.add_row(f"Mana: [#7B68EE]{self.mana}[/#7B68EE]/[#7B68EE]{self.manamax}[/#7B68EE]")
+        table.add_row(f"HP: [#00FF00]{self.hp}[/#00FF00]/[#00FF00]{self.max_hp}[/#00FF00]")
+        table.add_row(f"Mana: [#7B68EE]{self.mana}[/#7B68EE]/[#7B68EE]{self.max_mana}[/#7B68EE]")
         table.add_row(f"Ataque: [#FF0000]{self.atc}[/#FF0000]")
         table.add_row(f"Ouro: [#FFFF00]{self.gold}[/#FFFF00]")
         table.add_row(f"XP: [#4B0082]{self.xp}[/#4B0082]")
         console.print(table)
+        console.input("\n[bold magenta]Pressione Enter para continuar...[/bold magenta]")
+
 
     def batalha_info(self):
         """Exibe informações do jogador específicas para a batalha."""
-        table = Table(box=box.HEAVY, title=f"--- [bold blue]{self.nome}[/bold blue] ---")
-        table.add_row("HP", f"[#00FF00]{self.hp}[/#00FF00]/[#00FF00]{self.hpmax}[/#00FF00]")
-        table.add_row("Mana", f"[#7B68EE]{self.mana}[/#7B68EE]/[#7B68EE]{self.manamax}[/#7B68EE]")
-        table.add_row("Ataque", f"[#FF0000]{self.atc}[/#FF0000]")
+        table = Table(box=box.HEAVY, style='blue')
+        table.add_column(f"Nome: [bold white]{self.nome}[/bold white]")
+        table.add_row(f"HP: [#00FF00]{self.hp}[/#00FF00]/[#00FF00]{self.max_hp}[/#00FF00]")
+        table.add_row(f"Mana: [#7B68EE]{self.mana}[/#7B68EE]/[#7B68EE]{self.max_mana}[/#7B68EE]")
+        table.add_row(f"Ataque: [#FF0000]{self.atc}[/#FF0000]")
         console.print(table)
 
     def take_damage(self, damage: int):
@@ -51,27 +56,32 @@ class Jogador:
         console.print(f"[bold red]{self.nome} recebeu {damage} de dano![/bold red]")
 
     def attack_enemy(self, enemy):
-        """Jogador ataca o inimigo."""
-        damage = random.randint(self.atc - 3, self.atc + 3)
-        enemy.take_damage(damage)
-        console.print(f"[bold green]{self.nome} atacou {enemy.name} e causou {damage} de dano![/bold green]")
-        time.sleep(1)
+        """Jogador ataca o inimigo com chance de acerto."""
+        roll = random.randint(1, 100)
+        if roll <= self.hit_chance:
+            damage = random.randint(self.atc - 3, self.atc + 3)
+            enemy.take_damage(damage)
+            console.print(f"[bold green]{self.nome} atacou {enemy.name} e causou {damage} de dano![/bold green]")
+        else:
+            console.print(f"[bold yellow]{self.nome} errou o ataque em {enemy.name}![/bold yellow]")
 
 class Inimigo:
     """Representa um personagem inimigo."""
-    def __init__(self, name: str, hp: int, atk: int, xp: int, ascii_art=""):
+    def __init__(self, name: str, hp: int, atk: int, xp: int, gold: int, ascii_art=""):
         self.ascii = ascii_art
         self.name = name
         self.hp = hp
         self.atk = atk
         self.xp = xp
         self.hp_max = hp
+        self.hit_chance = 50
+        self.gold = gold
 
     def info(self):
         """Exibe informações detalhadas do inimigo."""
         table = Table(box=box.HEAVY, style='red')
         table.add_column(f'Nome: [bold red]{self.name}[/bold red]')
-        table.add_row(f'{self.ascii}')
+        table.add_row(f'[red]{self.ascii}[/red]')
         table.add_row(f"Vida: [#FF0000]{self.hp}[/#FF0000]/[#FF0000]{self.hp_max}[/#FF0000]")
         table.add_row(f'Ataque: {self.atk}')
         print(table)
@@ -84,25 +94,25 @@ class Inimigo:
         console.print(f"[bold red]{self.name} recebeu {damage} de dano![/bold red]")
 
     def attack_player(self, player):
-        """Inimigo ataca o jogador."""
-        damage = random.randint(self.atk - 2, self.atk + 2)
-        player.take_damage(damage)
-        console.print(f"[bold red]{self.name} atacou {player.nome} e causou {damage} de dano![/bold red]")
-        time.sleep(1)
-
+        """Inimigo ataca o jogador com chance de acerto."""
+        roll = random.randint(1, 100)
+        if roll <= self.hit_chance:
+            damage = random.randint(self.atk - 2, self.atk + 2)
+            player.take_damage(damage)
+            console.print(f"[bold red]{self.name} atacou {player.nome} e causou {damage} de dano![/bold red]")
+        else:
+            console.print(f"[bold yellow]{self.name} errou o ataque em {player.nome}![/bold yellow]")
 # --- Sistema de Combate ---
 def combat(player: Jogador, enemy: Inimigo):
     """Gerencia o combate por turnos entre o jogador e um inimigo."""
     console.print(f"\n--- [bold yellow]Um {enemy.name} selvagem apareceu![/bold yellow] ---")
-    time.sleep(1.5)
+    time.sleep(2)
 
     while player.hp > 0 and enemy.hp > 0:
         clear()
         console.print("\n--- [bold cyan]TURNO DE BATALHA[/bold cyan] ---")
         player.batalha_info()
         enemy.info()
-
-        # Turno do Jogador
         console.print("\n[bold green]Seu Turno![/bold green]")
         console.print("[1] Atacar")
 
@@ -112,12 +122,15 @@ def combat(player: Jogador, enemy: Inimigo):
             player.attack_enemy(enemy)
         else:
             console.print("[bold red]Ação inválida! Você perde seu turno![/bold red]")
-            time.sleep(1.5)
+        time.sleep(1.5)
+
         if enemy.hp <= 0:
             break
-        console.print(f"\n[bold red]Turno do {enemy.name}![/bold red]")
-        enemy.attack_player(player)
-        time.sleep(1.5)
+
+        if player.hp > 0: 
+            console.print(f"\n[bold red]Turno do {enemy.name}![/bold red]")
+            enemy.attack_player(player)
+            time.sleep(1.5) 
 
     clear()
     if player.hp <= 0:
@@ -127,41 +140,87 @@ def combat(player: Jogador, enemy: Inimigo):
         console.print(f"[bold green]Você derrotou o {enemy.name}![/bold green]")
         console.print(f"[bold yellow]Você ganhou {enemy.xp} XP![/bold yellow]")
         player.xp += enemy.xp
-        player.gold += random.randint(5, 15)
-        console.print(f"[bold yellow]Você encontrou {player.gold} ouro![/bold yellow]")
+        player.gold += enemy.gold
+        console.print(f"[bold yellow]Você encontrou {enemy.gold} ouro![/bold yellow]")
         player.status() 
 
-    console.input("\n[bold magenta]Pressione Enter para continuar...[/bold magenta]")
 def menu():
-    clear()
-    nome = console.input("[bold blue]Digite o nome do seu jogador: [/bold blue]")
-    player1 = Jogador(nome, hpmax=100, atc=15, manamax=50, gold=250, xp=0)
-    player1.status()
-    time.sleep(2)
-
-    # Definir alguns inimigos
-    mosquito_art = '''
-  }{    
+    def gerar_inimigo_aleatorio():
+        """Gera um inimigo com atributos aleatórios."""
+        nomes = ["Goblin", "Esqueleto", "Morcego Gigante", "Aranha Venenosa", "Lobo Faminto", "Slime Pegajoso", "Orc Selvagem"]
+        ascii_arts = [
+        '''
+  }{
  -==o-
+    ''',
+        '''
+  }O{
+  /|\
+  ===
+    ''',
+        '''
+  /\\
+ (oo)
+  \\/
+    ''',
+        '''
+   /\\
+  (..)/
+   VV
+    ''',
+        '''
+  ^ ^
+ (o o)
+  /V\\
+    ''',
+        '''
+  .---.
+ /     \\
+|  ()  |
+ \\     /
+  `---'
+    ''',
+        '''
+   O O
+  / V \\
+  \\_U_/
     '''
-    mosquito = Inimigo(ascii_art=mosquito_art, name='Mosquito Gigante', hp=50, atk=8, xp=50)
-
-    goblin_art = '''
- }O{
- /|\
- ===
-    '''
-    goblin = Inimigo(ascii_art=goblin_art, name='Goblin Selvagem', hp=75, atk=12, xp=75)
-
-    # Iniciar um encontro de combate
-    combat(player1, mosquito)
-    if player1.hp > 0:
-        console.print("\n[bold yellow]Você continua sua jornada... e encontra outro inimigo![/bold yellow]")
-        time.sleep(2)
-        combat(player1, goblin)
-    else:
-        console.print("\n[bold red]Sua jornada termina aqui.[/bold red]")
-
+    ]
+        nome_aleatorio = random.choice(nomes)
+        ascii_aleatorio = random.choice(ascii_arts)
+        hp_aleatorio = random.randint(30, 100)
+        atk_aleatorio = random.randint(5, 15)
+        xp_aleatorio = random.randint(100, 300)
+        gold_aleatorio = random.randint(1, 10)
+        return Inimigo(nome_aleatorio, hp_aleatorio, atk_aleatorio, xp_aleatorio, gold_aleatorio, ascii_aleatorio)
+    clear()
+    
+    nome = console.input("[bold blue]Digite o nome do seu jogador: [/bold blue]")
+    player1 = Jogador(nome, max_hp=100, atc=15, max_mana=50, gold=250, xp=0) 
+    while True:
+        clear()
+        console.print("[bold green]Bem-vindo à Aventura![/bold green]")
+        console.print("[1] Iniciar Combate")
+        console.print("[2] Status do Jogador")
+        console.print("[3] Sair do Jogo")
+        escolha = console.input("[bold blue]O que você gostaria de fazer? [/bold blue]")
+        if escolha == '1':
+            if player1.hp > 0:
+                console.print("\n[bold yellow]Você continua sua jornada... e encontra um inimigo![/bold yellow]")
+                time.sleep(2)
+                inimigo_atual = gerar_inimigo_aleatorio()
+                combat(player1, inimigo_atual)
+            else:
+                console.print("\n[bold red]Sua jornada termina aqui. Você não tem HP para continuar.[/bold red]")
+                break
+        elif escolha == '2':
+            player1.status()
+        elif escolha == '3':
+            console.print("\n[bold magenta]Obrigado por jogar! Até a próxima![/bold magenta]")
+            break 
+        else:
+            console.print("\n[bold red]Opção inválida. Por favor, escolha novamente.[/bold red]")
+            time.sleep(1.5)
 
 if __name__ == "__main__":
     menu()
