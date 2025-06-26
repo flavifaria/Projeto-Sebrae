@@ -13,7 +13,7 @@ def clear():
 
 class Jogador:
     """Representa o personagem do jogador."""
-    def __init__(self, nome: str, max_hp: int, atc: int, max_mana: int, gold: int, xp: int):
+    def __init__(self, nome: str, max_hp: int, atc: int, max_mana: int, mana_atk: int, gold: int, xp: int):
         self.nome = nome
         self.max_hp = max_hp
         self.hp = self.max_hp
@@ -24,6 +24,8 @@ class Jogador:
         self.gold = gold
         self.xp = xp
         self.hit_chance = 75
+        self.matk = mana_atk
+
 
     def status(self):
         """Exibe o status detalhado do jogador."""
@@ -33,6 +35,7 @@ class Jogador:
         table.add_row(f"HP: [#00FF00]{self.hp}[/#00FF00]/[#00FF00]{self.max_hp}[/#00FF00]")
         table.add_row(f"Mana: [#7B68EE]{self.mana}[/#7B68EE]/[#7B68EE]{self.max_mana}[/#7B68EE]")
         table.add_row(f"Ataque: [#FF0000]{self.atc}[/#FF0000]")
+        table.add_row(f"Ataque Mágico: [#FF00FF]{self.matk}[/#FF00FF]") # Added magic attack to status
         table.add_row(f"Ouro: [#FFFF00]{self.gold}[/#FFFF00]")
         table.add_row(f"XP: [#4B0082]{self.xp}[/#4B0082]")
         console.print(table)
@@ -46,6 +49,7 @@ class Jogador:
         table.add_row(f"HP: [#00FF00]{self.hp}[/#00FF00]/[#00FF00]{self.max_hp}[/#00FF00]")
         table.add_row(f"Mana: [#7B68EE]{self.mana}[/#7B68EE]/[#7B68EE]{self.max_mana}[/#7B68EE]")
         table.add_row(f"Ataque: [#FF0000]{self.atc}[/#FF0000]")
+        table.add_row(f"Ataque Mágico: [#FF00FF]{self.matk}[/#FF00FF]") # Added magic attack to battle info
         console.print(table)
 
     def take_damage(self, damage: int):
@@ -64,6 +68,21 @@ class Jogador:
             console.print(f"[bold green]{self.nome} atacou {enemy.name} e causou {damage} de dano![/bold green]")
         else:
             console.print(f"[bold yellow]{self.nome} errou o ataque em {enemy.name}![/bold yellow]")
+
+    def attack_mana(self, enemy, mana_cost: int, base_magic_damage: int):
+        """
+        Calcula o dano de mana e subtrai o custo de mana do jogador, aplicando-o ao inimigo.
+        """
+        if self.mana >= mana_cost:
+            self.mana -= mana_cost
+            mana_damage = base_magic_damage + self.matk
+            enemy.take_damage(mana_damage)
+            console.print(f"[bold magenta]{self.nome} usou um ataque mágico e causou {mana_damage} de dano em {enemy.name}![/bold magenta]")
+            console.print(f"Mana restante: [#7B68EE]{self.mana}[/#7B68EE]/[#7B68EE]{self.max_mana}[/#7B68EE]")
+            return mana_damage
+        else:
+            console.print(f"[bold red]{self.nome} não tem mana suficiente para usar este ataque![/bold red]")
+            return 0
 
 class Inimigo:
     """Representa um personagem inimigo."""
@@ -114,12 +133,17 @@ def combat(player: Jogador, enemy: Inimigo):
         player.batalha_info()
         enemy.info()
         console.print("\n[bold green]Seu Turno![/bold green]")
-        console.print("[1] Atacar")
+        console.print("[1] Atacar Físico")
+        console.print("[2] Atacar Mágico (Custo: 10 Mana)")
 
         choice = console.input("[bold blue]Escolha uma ação: [/bold blue]")
 
         if choice == '1':
             player.attack_enemy(enemy)
+        elif choice == '2':
+            mana_cost = 10
+            base_magic_damage = 10
+            player.attack_mana(enemy, mana_cost, base_magic_damage)
         else:
             console.print("[bold red]Ação inválida! Você perde seu turno![/bold red]")
         time.sleep(1.5)
@@ -196,7 +220,7 @@ def menu():
     clear()
     
     nome = console.input("[bold blue]Digite o nome do seu jogador: [/bold blue]")
-    player1 = Jogador(nome, max_hp=100, atc=15, max_mana=50, gold=250, xp=0) 
+    player1 = Jogador(nome, max_hp=100, atc=15, max_mana=50, mana_atk=10, gold=250, xp=0) 
     while True:
         clear()
         console.print("[bold green]Bem-vindo à Aventura![/bold green]")
