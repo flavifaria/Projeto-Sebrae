@@ -28,7 +28,7 @@ class Jogador:
 
     def status(self):
         """Exibe o status detalhado do jogador."""
-        clear() 
+        clear()
         table = Table(box=box.HEAVY, style="blue")
         table.add_column(f"Nome: [bold white]{self.nome}[/bold white]")
         table.add_row(f"HP: [#00FF00]{self.hp}[/#00FF00]/[#00FF00]{self.max_hp}[/#00FF00]")
@@ -38,7 +38,6 @@ class Jogador:
         table.add_row(f"XP: [#4B0082]{self.xp}[/#4B0082]")
         console.print(table)
         console.input("\n[bold magenta]Pressione Enter para continuar...[/bold magenta]")
-
 
     def batalha_info(self):
         """Exibe informações do jogador específicas para a batalha."""
@@ -67,6 +66,7 @@ class Jogador:
             console.print(f"[bold yellow]{self.nome} errou o ataque em {enemy.name}![/bold yellow]")
 
     def attack_mana(self, enemy):
+        """Ataca o inimigo usando mana."""
         roll = random.randint(1, 100)
         if roll <= self.hit_chance:
             damage = random.randint(self.atk_mana - 3, self.atk_mana + 3)
@@ -74,6 +74,173 @@ class Jogador:
             console.print(f"[bold green]{self.nome} atacou {enemy.name} e causou {damage} de dano![/bold green]")
         else:
             console.print(f"[bold yellow]{self.nome} errou o ataque em {enemy.name}![/bold yellow]")
+
+    def usar_item(self, item_nome: str):
+        if item_nome == "Poção de HP":
+            if "Poção de HP" in self.inventario:
+                self.hp = min(self.max_hp, self.hp + 30) 
+                self.inventario.remove("Poção de HP")
+                console.print("[bold green]Você usou uma Poção de HP e recuperou HP![/bold green]")
+            else:
+                console.print("[bold red]Você não tem Poções de HP no seu inventário.[/bold red]")
+        elif item_nome == 'Poção de Mana':
+            if 'Poção de Mana' in self.inventario:
+                self.mana = min(self.max_mana, self.mana + 30)
+                self.inventario.remove('Poção de Mana')
+                console.print('[bold blue]Você usou uma Poção de Mana e recuperou Mana![/bold blue]')
+            else:
+                console.print("[bold red]Você não tem Poções de Mana no seu inventário.[/bold red]")
+        elif item_nome == "Cajado":
+            if "Cajado" in self.inventario:
+                if "Cajado Equipado" not in self.inventario:
+                    self.atk_mana += 5 
+                    self.inventario.remove("Cajado")
+                    self.inventario.append("Cajado Equipado")  
+                    console.print(f"[bold green]Você equipou o Cajado e seu ataque magico em {self.atk_mana}[/bold green]")
+                else:
+                    console.print("[bold yellow]Você já tem um Cajado Equipado.[/bold yellow]") 
+            else:
+                console.print("[bold red]Você não tem um Cajado no seu inventário.[/bold red]")
+        elif item_nome == "Espada Longa":
+            if "Espada Longa" in self.inventario:
+                if "Espada Equipada" not in self.inventario: 
+                    self.atc += 10    
+                    self.inventario.remove("Espada Longa")
+                    self.inventario.append("Espada Equipado")
+                    console.print("[bold green]Você equipou a Espada Longa e seu ataque aumentou em 10![/bold green]")
+                else:
+                    console.print("[bold yellow]Você já tem uma Espada equipada.[/bold yellow]")
+            else:
+                console.print("[bold red]Você não tem uma Espada Longa no seu inventário.[/bold red]")
+        elif item_nome == 'Capacete':
+            if "Capacete" in self.inventario:
+                if "Capacete Equipado" not in self.inventario:
+                    self.max_hp += 10 
+                    self.inventario.remove("Capacete")
+                    self.inventario.append("Capacete Equipado")
+                    console.print("[bold green]Você equipou o Capacete e seu Hp aumentou em 10![/bold green]")
+                else:
+                    console.print("[bold yellow]Você já tem um Capacete Equipado.[/bold yellow]")
+            else:
+                console.print("[bold red]Você não tem um Capacete no seu inventário.[/bold red]")
+        else:
+            console.print("[bold red]Item inválido.[/bold red]")
+        time.sleep(1.5)
+
+    def desequipar_item(self, item_nome: str):
+        if item_nome == "Cajado Equipado":
+            if "Cajado Equipado" in self.inventario:
+                self.atk_mana -= 5
+                self.inventario.remove("Cajado Equipado")
+                self.inventario.append("Cajado")
+                console.print(f"[bold green]Você desequipou o Cajado. Seu ataque mágico voltou para {self.atk_mana}[/bold green]")
+            else:
+                console.print("[bold red]Você não tem um Cajado equipado.[/bold red]")
+        elif item_nome == "Espada Equipado":
+            if "Espada Equipado" in self.inventario:
+                self.atc -= 10
+                self.inventario.remove("Espada Equipado")
+                self.inventario.append("Espada Longa")
+                console.print(f"[bold green]Você desequipou a Espada Longa. Seu ataque voltou para {self.atc}[/bold green]")
+            else:
+                console.print("[bold red]Você não tem uma Espada Longa equipada.[/bold red]")
+        elif item_nome == "Capacete Equipado":
+            if "Capacete Equipado" in self.inventario:
+                self.max_hp -= 10
+                self.hp = min(self.hp, self.max_hp) 
+                self.inventario.remove("Capacete Equipado")
+                self.inventario.append("Capacete")
+                console.print(f"[bold green]Você desequipou o Capacete. Seu HP máximo voltou para {self.max_hp}[/bold green]")
+            else:
+                console.print("[bold red]Você não tem um Capacete equipado.[/bold red]")
+        else:
+            console.print("[bold red]Item não pode ser desequipado ou não está equipado.[/bold red]")
+        time.sleep(1.5)
+
+    def mostrar_inventario(self):
+        clear()
+        if not self.inventario:
+            console.print("[bold yellow]Seu inventário está vazio.[/bold yellow]")
+        else:
+            table = Table(box=box.HEAVY, style="cyan")
+            table.add_column("[bold cyan]Inventário[/bold cyan]")
+            for item in self.inventario:
+                table.add_row(item)
+            console.print(table)
+
+    def exibir_menu_inventario(self):
+        """Exibe o menu do inventário e permite ao jogador usar ou desequipar um item."""
+        clear()
+        if not self.inventario:
+            console.print("[bold yellow]Seu inventário está vazio.[/bold yellow]")
+            time.sleep(1.5)
+            return
+        while True:
+            clear()
+            self.mostrar_inventario()
+            console.print("[bold magenta]O que deseja fazer com seu inventário?[/bold magenta]")
+            console.print("[1] Usar Item")
+            console.print("[2] Desequipar Item") 
+            console.print("[3] Sair do Inventário") 
+            choice = console.input("[bold blue]Escolha uma opção: [/bold blue]")
+            if choice == '1':
+                clear()
+                utilizable_items = [item for item in self.inventario if item in ["Poção de HP", "Poção de Mana", "Cajado", "Espada Longa", "Capacete"]]
+                if not utilizable_items:
+                    console.print("[bold yellow]Você não tem itens utilizáveis (poções ou equipamentos não equipados) no seu inventário.[/bold yellow]")
+                    time.sleep(1.5)
+                    continue
+
+                console.print("[bold magenta]Seu Inventário (Itens Utilizáveis):[/bold magenta]")
+                for i, item in enumerate(utilizable_items):
+                    console.print(f"[{i+1}] {item}")
+                item_choice = console.input("[bold blue]Escolha o número do item para usar (ou '0' para cancelar): [/bold blue]")
+                try:
+                    item_index = int(item_choice) - 1
+                    if 0 <= item_index < len(utilizable_items):
+                        self.usar_item(utilizable_items[item_index])
+                        time.sleep(1.5)
+                    elif item_index == -1:
+                        console.print("[bold yellow]Ação cancelada.[/bold yellow]")
+                        time.sleep(1.5)
+                    else:
+                        console.print("[bold red]Escolha inválida de item![/bold red]")
+                        time.sleep(1.5)
+                except ValueError:
+                    console.print("[bold red]Entrada inválida![/bold red]")
+                    time.sleep(1.5)
+            elif choice == '2': 
+                clear()
+                equipped_items = [item for item in self.inventario if "Equipado" in item]
+                if not equipped_items:
+                    console.print("[bold yellow]Você não tem itens equipados para desequipar.[/bold yellow]")
+                    time.sleep(1.5)
+                    continue
+                console.print("\n[bold magenta]Itens Equipados:[/bold magenta]")
+                for i, item in enumerate(equipped_items):
+                    console.print(f"[{i+1}] {item}")
+                item_choice = console.input("[bold blue]Escolha o número do item para desequipar (ou '0' para cancelar): [/bold blue]")
+                try:
+                    item_index = int(item_choice) - 1
+                    if 0 <= item_index < len(equipped_items):
+                        self.desequipar_item(equipped_items[item_index])
+                        time.sleep(1.5)
+                    elif item_index == -1:
+                        console.print("[bold yellow]Ação cancelada.[/bold yellow]")
+                        time.sleep(1.5)
+                    else:
+                        console.print("[bold red]Escolha inválida de item![/bold red]")
+                        time.sleep(1.5)
+                except ValueError:
+                    console.print("[bold red]Entrada inválida![/bold red]")
+                    time.sleep(1.5)
+            elif choice == '3':
+                console.print("[bold yellow]Saindo do Inventário...[/bold yellow]")
+                time.sleep(1)
+                break
+            else:
+                console.print("[bold red]Opção inválida. Por favor, escolha novamente.[/bold red]")
+                time.sleep(1.5)
 
 class Inimigo:
     """Representa um personagem inimigo."""
@@ -112,7 +279,7 @@ class Inimigo:
             console.print(f"[bold red]{self.name} atacou {player.nome} e causou {damage} de dano![/bold red]")
         else:
             console.print(f"[bold yellow]{self.name} errou o ataque em {player.nome}![/bold yellow]")
-# --- Sistema de Combate ---
+
 def combat(player: Jogador, enemy: Inimigo):
     """Gerencia o combate por turnos entre o jogador e um inimigo."""
     console.print(f"\n--- [bold yellow]Um {enemy.name} selvagem apareceu![/bold yellow] ---")
@@ -125,25 +292,53 @@ def combat(player: Jogador, enemy: Inimigo):
         enemy.info()
         console.print("\n[bold green]Seu Turno![/bold green]")
         console.print("[1] Atacar")
-        console.print("[2]Mana")
+        console.print("[2] Mana")
+        console.print("[3] Usar Item")
         choice = console.input("[bold blue]Escolha uma ação: [/bold blue]")
         if choice == '1':
             player.attack_enemy(enemy)
         elif choice == '2':
-            player.attack_mana(enemy)
-            player.mana -= 10
+            if player.mana >= 10:
+                player.attack_mana(enemy)
+                player.mana -= 10
+            else:
+                console.print("[bold red]Mana insuficiente![/bold red]")
+        elif choice == '3':
+            clear()
+            utilizable_items_combat = [item for item in player.inventario if item in ["Poção de HP", "Poção de Mana"]]
+            
+            if not utilizable_items_combat:
+                console.print("[bold yellow]Você não tem poções para usar no momento.[/bold yellow]")
+                time.sleep(1.5)
+                continue
+            console.print("[bold magenta]Seu Inventário (Poções):[/bold magenta]")
+            for i, item in enumerate(utilizable_items_combat):
+                console.print(f"[{i+1}] {item}")
+            item_choice_combat = console.input("[bold blue]Escolha o número da poção para usar (ou '0' para cancelar): [/bold blue]")
+            try:
+                item_index_combat = int(item_choice_combat) - 1
+                if 0 <= item_index_combat < len(utilizable_items_combat):
+                    player.usar_item(utilizable_items_combat[item_index_combat])
+                    time.sleep(1.5)
+                elif item_index_combat == -1:
+                    console.print("[bold yellow]Ação cancelada.[/bold yellow]")
+                    time.sleep(1.5)
+                else:
+                    console.print("[bold red]Escolha inválida de item![/bold red]")
+                    time.sleep(1.5)
+            except ValueError:
+                console.print("[bold red]Entrada inválida![/bold red]")
+                time.sleep(1.5)
+
         else:
             console.print("[bold red]Ação inválida! Você perde seu turno![/bold red]")
         time.sleep(1.5)
-
         if enemy.hp <= 0:
             break
-
-        if player.hp > 0: 
+        if player.hp > 0:
             console.print(f"\n[bold red]Turno do {enemy.name}![/bold red]")
             enemy.attack_player(player)
-            time.sleep(1.5) 
-
+            time.sleep(1.5)
     clear()
     if player.hp <= 0:
         console.print("[bold red]Você foi derrotado... Fim de Jogo.[/bold red]")
@@ -153,8 +348,6 @@ def combat(player: Jogador, enemy: Inimigo):
         console.print(f"[bold yellow]Você ganhou {enemy.xp} XP![/bold yellow]")
         player.xp += enemy.xp
         player.gold += enemy.gold
-        console.print(f"[bold yellow]Você encontrou {enemy.gold} ouro![/bold yellow]")
-        player.status() 
 
 def menu():
     def gerar_inimigo_aleatorio():
@@ -167,7 +360,7 @@ def menu():
     ''',
         '''
   }O{
-  /|\
+  /|\\
   ===
     ''',
         '''
@@ -176,9 +369,9 @@ def menu():
   \\/
     ''',
         '''
-   /\\
-  (..)/
-   VV
+    /\\
+   (..)/
+    VV
     ''',
         '''
   ^ ^
@@ -187,17 +380,17 @@ def menu():
     ''',
         '''
   .---.
- /     \\
-|  ()  |
- \\     /
+ /   \\
+|     |
+ \\   /
   `---'
     ''',
         '''
-   O O
-  / V \\
-  \\_U_/
+    O O
+   / V \\
+    \\_U_/
     '''
-    ]
+        ]
         nome_aleatorio = random.choice(nomes)
         ascii_aleatorio = random.choice(ascii_arts)
         hp_aleatorio = random.randint(30, 100)
@@ -206,15 +399,19 @@ def menu():
         gold_aleatorio = random.randint(1, 10)
         return Inimigo(nome_aleatorio, hp_aleatorio, atk_aleatorio, xp_aleatorio, gold_aleatorio, ascii_aleatorio)
     clear()
-    
     nome = console.input("[bold blue]Digite o nome do seu jogador: [/bold blue]")
-    player1 = Jogador(nome, max_hp=100, atc=15, max_mana=50, atm=25, gold=250, xp=0) 
+    player1 = Jogador(nome, max_hp=100, atc=15, max_mana=50, atm=25, gold=250, xp=0)
+    player1.inventario.append("Poção de HP")
+    player1.inventario.append("Cajado")
+    player1.inventario.append("Capacete")
+    player1.inventario.append("Espada Longa")
     while True:
         clear()
         console.print("[bold green]Bem-vindo à Aventura![/bold green]")
         console.print("[1] Iniciar Combate")
         console.print("[2] Status do Jogador")
-        console.print("[3] Sair do Jogo")
+        console.print("[3] Inventário") 
+        console.print("[4] Sair do Jogo")
         escolha = console.input("[bold blue]O que você gostaria de fazer? [/bold blue]")
         if escolha == '1':
             if player1.hp > 0:
@@ -228,8 +425,10 @@ def menu():
         elif escolha == '2':
             player1.status()
         elif escolha == '3':
+            player1.exibir_menu_inventario()
+        elif escolha == '4':
             console.print("\n[bold magenta]Obrigado por jogar! Até a próxima![/bold magenta]")
-            break 
+            break
         else:
             console.print("\n[bold red]Opção inválida. Por favor, escolha novamente.[/bold red]")
             time.sleep(1.5)
