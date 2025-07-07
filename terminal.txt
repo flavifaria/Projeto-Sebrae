@@ -1,0 +1,31 @@
+cd c:/Users/eviha/OneDrive/Documentos/progeto/
+python rpd.py
+
+
+            elif ops == '5':
+                parar_musica()
+                music_boss()
+                clear()
+                table = Table(style='blue',box=box.HEAVY)
+                table.add_column("Grande Lago:")
+                table.add_column("Ações:")
+                table.add_row(f'[bold]{art.lagos}[/bold]',f'[bold yellow]{art.lago_ops1}[/bold yellow]')
+                print(table)
+                lago = console.input()
+                if lago == '1':
+                    if lago1 == False:
+                        console.print("[bold red]Você se aproxima do Chefe e ele sai\nda água e vai te atacar se prepare[/bold red]")
+                        time.sleep(3)
+                        mos = Inimigo(name='Aedes Aegypti', hp=600, atk=30, xp=5000, gold=1500, ascii_art=b)
+                        combat(player, mos)
+                        if player.hp <= 0:
+                            exit()
+                        elif player.hp > 0:
+                            lago1 = True
+                            console.print("[bold yellow]Você derrotol o Aedes Aegypti[/bold yellow]")
+                            cidade03()
+                    elif lago1 == True:
+                        console.print("[bold yellow]Você já derrotol o Aedes Aegypti[/bold yellow]")
+                        time.sleep(3)
+                elif lago == '2':
+                    cidade3()
